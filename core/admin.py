@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Reparto, Tavolo, Prodotto, Comanda, RigaComanda, EventoComanda
+from .models import Reparto, Tavolo, Prodotto, Comanda, RigaComanda
 
 
 @admin.register(Reparto)
@@ -30,8 +30,8 @@ class RigaInline(admin.TabularInline):
 
 @admin.register(Comanda)
 class ComandaAdmin(admin.ModelAdmin):
-    list_display = ("id", "tavolo", "stato", "creata_da", "creata_il", "chiusa_il")
-    list_filter = ("stato", "tavolo")
+    list_display = ("id", "tavolo", "coperti", "creata_da", "creata_il")
+    list_filter = ("tavolo",)
     search_fields = ("id", "tavolo__numero", "tavolo__nome")
     inlines = [RigaInline]
 
@@ -42,9 +42,3 @@ class RigaComandaAdmin(admin.ModelAdmin):
     list_filter = ("reparto", "stato")
     search_fields = ("comanda__id", "prodotto__nome")
 
-
-@admin.register(EventoComanda)
-class EventoComandaAdmin(admin.ModelAdmin):
-    list_display = ("id", "comanda", "riga", "tipo", "fatto_da", "fatto_il")
-    list_filter = ("tipo",)
-    search_fields = ("comanda__id",)

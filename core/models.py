@@ -51,35 +51,21 @@ class Prodotto(models.Model):
 
 
 class Comanda(models.Model):
-    class Stato(models.TextChoices):
-        APERTA = "APERTA", "Aperta"
-        CHIUSA = "CHIUSA", "Chiusa"
-        ANNULLATA = "ANNULLATA", "Annullata"
 
-    tavolo = models.ForeignKey(Tavolo, on_delete=models.PROTECT, related_name="comande")
-    stato = models.CharField(max_length=10, choices=Stato.choices, default=Stato.APERTA)
-
+    
+    coperti = models.PositiveSmallIntegerField(default=1) 
+    tavolo = models.OneToOneField(Tavolo,on_delete=models.PROTECT,related_name='commanda_corrente')
     creata_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="comande_create"
     )
     creata_il = models.DateTimeField(auto_now_add=True)
-    chiusa_il = models.DateTimeField(null=True, blank=True)
     note = models.TextField(blank=True)
-
     class Meta:
         db_table = "comanda"
-        ordering = ["-creata_il"]
-        constraints = [
-            # ✅ una sola comanda APERTA per tavolo
-            models.UniqueConstraint(
-                fields=["tavolo"],
-                condition=Q(stato="APERTA"),
-                name="una_comanda_aperta_per_tavolo",
-            )
-        ]
+      
 
     def __str__(self) -> str:
-        return f"Comanda #{self.id} - {self.tavolo} ({self.stato})"
+        return f"Comanda #{self.id} - {self.tavolo}"
 
 
 class RigaComanda(models.Model):
@@ -115,38 +101,5 @@ class RigaComanda(models.Model):
 
     def __str__(self) -> str:
         return f"{self.quantita}x {self.prodotto} ({self.reparto.codice}) [{self.stato}]"
-
-
-class EventoComanda(models.Model):
-    class Tipo(models.TextChoices):
-        RIGA_CREATA = "RIGA_CREATA", "Riga creata"
-        RIGA_INVIATA = "RIGA_INVIATA", "Riga inviata"
-        RIGA_PRONTA = "RIGA_PRONTA", "Riga pronta"
-        RIGA_SERVITA = "RIGA_SERVITA", "Riga servita"
-        RIGA_ANNULLATA = "RIGA_ANNULLATA", "Riga annullata"
-        COMANDA_CHIUSA = "COMANDA_CHIUSA", "Comanda chiusa"
-
-    comanda = models.ForeignKey(Comanda, on_delete=models.CASCADE, related_name="eventi")
-    riga = models.ForeignKey(RigaComanda, on_delete=models.SET_NULL, null=True, blank=True, related_name="eventi")
-
-    tipo = models.CharField(max_length=30, choices=Tipo.choices)
-    fatto_da = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="eventi_comanda"
-    )
-    fatto_il = models.DateTimeField(auto_now_add=True)
-
-    # opzionale: info extra (es. cambio quantità, note, ecc.)
-    dati = models.JSONField(null=True, blank=True)
-
-    class Meta:
-        db_table = "evento_comanda"
-        ordering = ["-fatto_il"]
-        indexes = [
-            models.Index(fields=["comanda", "tipo"], name="idx_evt_comanda_tipo"),
-        ]
-
-    def __str__(self) -> str:
-        return f"{self.tipo} - comanda {self.comanda_id}"
-
 
 # Create your models here.
