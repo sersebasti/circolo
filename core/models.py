@@ -54,7 +54,7 @@ class Comanda(models.Model):
 
     
     coperti = models.PositiveSmallIntegerField(default=1) 
-    tavolo = models.OneToOneField(Tavolo,on_delete=models.PROTECT,related_name='commanda_corrente')
+    tavolo = models.OneToOneField(Tavolo,on_delete=models.PROTECT,related_name='comanda_corrente')
     creata_da = models.ForeignKey(
         settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="comande_create"
     )
