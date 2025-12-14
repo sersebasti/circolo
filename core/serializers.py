@@ -21,3 +21,11 @@ class RigaComandaSerializer(serializers.ModelSerializer):
             "pronta_il",
             "servita_il",
         ]
+
+class ModificaRigaSerializer(serializers.Serializer):
+    quantita = serializers.IntegerField(min_value=1, required=False)
+    note = serializers.CharField(required=False, allow_blank=True)
+
+
+class InviaRepartoSerializer(serializers.Serializer):
+    reparto_id = serializers.IntegerField()
