@@ -39,6 +39,7 @@ services:
     env_file: .env
     volumes:
       - .:/app
+      - vscode-server:/root/.vscode-server
     ports:
       - "8000:8000"
     depends_on:
@@ -50,3 +51,4 @@ services:
 
 volumes:
   mariadbdata:
+  vscode-server:
