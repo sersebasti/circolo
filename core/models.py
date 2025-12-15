@@ -56,7 +56,9 @@ class Comanda(models.Model):
     coperti = models.PositiveSmallIntegerField(default=1) 
     tavolo = models.OneToOneField(Tavolo,on_delete=models.PROTECT,related_name='comanda_corrente')
     creata_da = models.ForeignKey(
-        settings.AUTH_USER_MODEL, on_delete=models.PROTECT, related_name="comande_create"
+        settings.AUTH_USER_MODEL,
+        on_delete=models.PROTECT,
+        related_name="comande_create"
     )
     creata_il = models.DateTimeField(auto_now_add=True)
     note = models.TextField(blank=True)

@@ -2,13 +2,19 @@
 from __future__ import annotations
 
 from django.db import transaction, IntegrityError
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
 
 from .models import Tavolo, Comanda, RigaComanda, Reparto, Prodotto
+from django.contrib.auth import get_user_model
 
 # -------------------------
 # COMANDA
 # -------------------------
+def _system_user():
+    User = get_user_model()
+    return User.objects.get(username="system")
+
 
 @transaction.atomic
 def get_or_create_comanda_corrente(*, tavolo: Tavolo, coperti: int, user) -> Comanda:
@@ -19,12 +25,17 @@ def get_or_create_comanda_corrente(*, tavolo: Tavolo, coperti: int, user) -> Com
     if coperti < 1:
         coperti = 1
 
+
+    # 🔹 fallback automatico
+    if user is None:
+        user = _system_user()
+
     try:
         return tavolo.comanda_corrente  # related_name
     except Comanda.DoesNotExist:
         pass
-
     try:
+        
         return Comanda.objects.create(
             tavolo=tavolo,
             coperti=coperti,
@@ -86,10 +97,12 @@ def aggiungi_riga(
 
 
 @transaction.atomic
-def modifica_riga_bozza(*, riga: RigaComanda, quantita: int | None = None, note: str | None = None) -> RigaComanda:
+def modifica_riga_bozza(*, riga_id: RigaComanda, quantita: int | None = None, note: str | None = None) -> RigaComanda:
     """
     Modifiche consentite SOLO se BOZZA.
     """
+    riga = get_object_or_404(RigaComanda, pk=riga_id)
+    
     if riga.stato != RigaComanda.Stato.BOZZA:
         raise ValueError("Puoi modificare solo righe in stato BOZZA.")
 
@@ -126,11 +139,13 @@ def elimina_riga_bozza(*, riga: RigaComanda) -> None:
 # -------------------------
 
 @transaction.atomic
-def invia_riga(*, riga: RigaComanda) -> RigaComanda:
+def invia_riga(*, riga_id: int) -> RigaComanda:
     """
     BOZZA -> INVIATA (solo se reparto.auto_pronta=False).
     Idempotente: se non è BOZZA, non cambia nulla.
     """
+    riga = get_object_or_404(RigaComanda, pk=riga_id)
+    
     if riga.reparto.auto_pronta:
         # BAR: non si invia
         return riga

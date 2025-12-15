@@ -4,7 +4,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 
-from .models import Comanda, Reparto, Tavolo, Prodotto
+from .models import Comanda, Reparto, RigaComanda, Tavolo, Prodotto
 from .serializers import AggiungiRigaSerializer, InviaRepartoSerializer, ModificaRigaSerializer, RigaComandaSerializer # type: ignore
 from . import services
 
@@ -53,11 +53,12 @@ class RigaUpdate(APIView):
         ser = ModificaRigaSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
 
+        riga_instance = get_object_or_404(RigaComanda, pk=riga_id)
         riga = services.modifica_riga_bozza(
-            riga_id=riga_id,
-            **ser.validated_data
+            riga_id=riga_instance.pk,
+            quantita=ser.validated_data.get("quantita"),
+            note=ser.validated_data.get("note")
         )
-
         return Response(
             RigaComandaSerializer(riga).data,
             status=status.HTTP_200_OK
@@ -65,7 +66,8 @@ class RigaUpdate(APIView):
     
 class RigaInvia(APIView):
     def post(self, request, riga_id):
-        riga = services.invia_riga(riga_id)
+        riga_instance = get_object_or_404(RigaComanda, pk=riga_id)
+        riga = services.invia_riga(riga=riga_instance)
         return Response(
             RigaComandaSerializer(riga).data,
             status=status.HTTP_200_OK
@@ -77,10 +79,11 @@ class ComandaInviaReparto(APIView):
         ser = InviaRepartoSerializer(data=request.data)
         ser.is_valid(raise_exception=True)
 
-        righe = services.invia_righe_reparto(
-            comanda_id=comanda_id,
-            reparto_id=ser.validated_data["reparto_id"]
-        )
+        comanda = get_object_or_404(Comanda, id=comanda_id)
+        reparto = get_object_or_404(Reparto, id=ser.validated_data["reparto_id"])
+        services.invia_reparto(comanda=comanda, reparto=reparto)
+        # Fetch updated rows to return
+        righe = comanda.righe.filter(reparto=reparto, stato=services.RigaComanda.Stato.INVIATA)
 
         return Response(
             RigaComandaSerializer(righe, many=True).data,
@@ -89,7 +92,8 @@ class ComandaInviaReparto(APIView):
     
 class RigaPronta(APIView):
     def post(self, request, riga_id):
-        riga = services.segna_pronta(riga_id)
+        riga_instance = get_object_or_404(RigaComanda, pk=riga_id)
+        riga = services.segna_pronta(riga=riga_instance)
         return Response(
             RigaComandaSerializer(riga).data,
             status=status.HTTP_200_OK
@@ -97,7 +101,8 @@ class RigaPronta(APIView):
 
 class RigaServita(APIView):
     def post(self, request, riga_id):
-        riga = services.segna_servita(riga_id)
+        riga_instance = get_object_or_404(RigaComanda, pk=riga_id)
+        riga = services.segna_servita(riga=riga_instance)
         return Response(
             RigaComandaSerializer(riga).data,
             status=status.HTTP_200_OK
