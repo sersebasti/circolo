@@ -83,8 +83,7 @@ class RigaUpdate(APIView):
     
 class RigaInvia(APIView):
     def post(self, request, riga_id):
-        riga_instance = get_object_or_404(RigaComanda, pk=riga_id)
-        riga = services.invia_riga(riga=riga_instance)
+        riga = services.invia_riga(riga_id=riga_id)
         return Response(
             RigaComandaSerializer(riga).data,
             status=status.HTTP_200_OK
