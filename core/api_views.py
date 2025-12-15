@@ -9,6 +9,23 @@ from .serializers import AggiungiRigaSerializer, InviaRepartoSerializer, Modific
 from . import services
 
 
+class TavoloCreaComanda(APIView):
+    """
+    POST /api/tavoli/<tavolo_id>/comanda
+    Body opzionale: { coperti }
+    Risposta: comanda creata o già esistente (JSON)
+    """
+    def post(self, request, tavolo_id: int):
+        tavolo = get_object_or_404(Tavolo, id=tavolo_id)
+        coperti = request.data.get("coperti", 1)
+        comanda = services.get_or_create_comanda_corrente(
+            tavolo=tavolo,
+            coperti=coperti,
+            user=request.user if request.user.is_authenticated else None,
+        )
+        return Response({"comanda_id": comanda.id, "coperti": comanda.coperti, "tavolo": tavolo.id}, status=status.HTTP_201_CREATED)
+
+
 class TavoloRigheCreate(APIView):
     """
     POST /api/tavoli/<tavolo_id>/righe

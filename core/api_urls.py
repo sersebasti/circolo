@@ -1,8 +1,9 @@
 # core/api_urls.py
 from django.urls import path
-from .api_views import ComandaInviaReparto, ComandaPagaECancella, RepartoCoda, RigaInvia, RigaPronta, RigaServita, RigaUpdate, RighePronteDaServire, TavoloRigheCreate
+from .api_views import ComandaInviaReparto, ComandaPagaECancella, RepartoCoda, RigaInvia, RigaPronta, RigaServita, RigaUpdate, RighePronteDaServire, TavoloRigheCreate, TavoloCreaComanda
 
 urlpatterns = [
+    path("tavoli/<int:tavolo_id>/comanda", TavoloCreaComanda.as_view()),
     # --- CREAZIONE / MODIFICA ---
     path("tavoli/<int:tavolo_id>/righe", TavoloRigheCreate.as_view()),
     path("righe/<int:riga_id>", RigaUpdate.as_view()),
